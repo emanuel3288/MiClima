@@ -13,7 +13,6 @@ interface ThermalCalculatorProps {
 
 export const ThermalCalculator = ({ 
   onCalculate, 
-  onClose,
   defaultTemperature = "",
   defaultHumidity = "",
   defaultWindSpeed = ""
