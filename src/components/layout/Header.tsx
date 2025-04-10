@@ -13,7 +13,7 @@ interface HeaderProps {
   onRemoveCity: (city: string) => void;
 }
 
-const Header = ({ city, recentCities, sunrise, sunset, onCitySelect, onRemoveCity }: HeaderProps) => {
+const Header = ({ city, recentCities, onCitySelect, onRemoveCity }: HeaderProps) => {
   return (
     <AppBar position="fixed" sx={{ backgroundColor: "#0D47A1" }}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between", position: "relative" }}>

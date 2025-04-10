@@ -7,13 +7,7 @@ import WeatherDashboard from "../layoutApp/WeatherDashboard";
 import useGeolocation from "../layoutApp/useGeolocation";
 import useCitySearch from "../layoutApp/useCitySearch";
 
-// Función para convertir Unix timestamp a hora y minutos
-const convertUnixToTime = (timestamp: number) => {
-  const date = new Date(timestamp * 1000); // Convertimos de segundos a milisegundos
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  return `${hours}:${minutes < 10 ? "0" : ""}${minutes}`;
-};
+
 
 interface ErrorSnackbarProps {
   error: string | null;

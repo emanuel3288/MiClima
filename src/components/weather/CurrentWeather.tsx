@@ -13,15 +13,6 @@ interface Props {
   lon: number;
 }
 
-interface WeatherCardProps {
-  weather: WeatherData;
-  currentTime: string;
-  windSpeed: number;
-  gustSpeed?: number;
-  humidity: string | number;
-  children?: React.ReactNode;
-}
-
 const CurrentWeather = ({ city }: Props) => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -121,12 +112,6 @@ const CurrentWeather = ({ city }: Props) => {
   const gustSpeedKmh = weather.wind.gust ? Math.round(weather.wind.gust * 3.6) : undefined;
   const humidity = weather.main.humidity !== undefined ? weather.main.humidity : 'No disponible';
 
-  const formatTime = (timestamp: number | undefined): string => {
-    if (timestamp) {
-      return moment.unix(timestamp).format('HH:mm');
-    }
-    return 'N/A';
-  };
 
   return (
     <WeatherCard
