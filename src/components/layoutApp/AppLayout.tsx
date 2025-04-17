@@ -7,15 +7,11 @@ import WeatherDashboard from "../layoutApp/WeatherDashboard";
 import useGeolocation from "../layoutApp/useGeolocation";
 import useCitySearch from "../layoutApp/useCitySearch";
 
+const defaultCity = "Buenos Aires";
+const defaultCoords = { lat: -34.61315, lon: -58.37723 };
 
-
-interface ErrorSnackbarProps {
-  error: string | null;
-  onClose: () => void;
-}
-
-const ErrorSnackbar = ({ error, onClose }: ErrorSnackbarProps) => {
-  const [open, setOpen] = useState<boolean>(!!error);
+const ErrorSnackbar = ({ error, onClose }: { error: string | null; onClose: () => void }) => {
+  const [open, setOpen] = useState(!!error);
 
   useEffect(() => {
     setOpen(!!error);
@@ -43,27 +39,24 @@ const ErrorSnackbar = ({ error, onClose }: ErrorSnackbarProps) => {
 };
 
 const AppLayout = () => {
-  const [backgroundImage, setBackgroundImage] = useState<string>(
+  const [backgroundImage, setBackgroundImage] = useState(
     "https://images.pexels.com/photos/466685/pexels-photo-466685.jpeg?auto=compress&cs=tinysrgb&w=1920"
   );
   const [currentError, setCurrentError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>("");
+  const [recentCities, setRecentCities] = useState<{ name: string; coordinates: { lat: number; lon: number } }[]>([]);
 
   const [weatherData, setWeatherData] = useState({
-    city: "Buenos Aires",
-    coordinates: { lat: -34.61315, lon: -58.37723 },
+    city: defaultCity,
+    coordinates: defaultCoords,
     sunrise: 0,
     sunset: 0,
   });
 
   const [mapData, setMapData] = useState({
     city: "buenos-aires",
-    coordinates: { lat: -34.61315, lon: -58.37723 },
+    coordinates: defaultCoords,
   });
-
-  const [recentCities, setRecentCities] = useState<
-    { name: string; coordinates: { lat: number; lon: number } }[]
-  >([]);
 
   const { coordinates: geoCoords, city: geoCity, isLoading: geoLoading, error: geoError } = useGeolocation();
   const {
@@ -78,93 +71,49 @@ const AppLayout = () => {
     searchData,
   } = useCitySearch(setBackgroundImage, inputValue, setInputValue);
 
-  const formatCityForUrl = (cityName: string) => {
-    return cityName.split(",")[0].trim().toLowerCase().replace(/\s+/g, "-");
-  };
+  const formatCityForUrl = (cityName: string) => cityName.split(",")[0].trim().toLowerCase().replace(/\s+/g, "-");
 
   useEffect(() => {
-    if (searchData) {
-      const formattedCity = formatCityForUrl(searchData.city);
+    const updateData = (city: string, coords: { lat: number; lon: number }, sunrise = 0, sunset = 0) => {
+      const formattedCity = formatCityForUrl(city);
 
-      setWeatherData({
-        city: searchData.city,
-        coordinates: searchData.coordinates,
-        sunrise: searchData.sunrise,
-        sunset: searchData.sunset,
-      });
-
-      setMapData({
-        city: formattedCity,
-        coordinates: searchData.coordinates,
-      });
+      setWeatherData({ city, coordinates: coords, sunrise, sunset });
+      setMapData({ city: formattedCity, coordinates: coords });
+      setInputValue(city);
 
       setRecentCities((prev) => {
-        const newCities = [
-          { name: searchData.city, coordinates: searchData.coordinates },
-          ...prev,
-        ];
-        return newCities.slice(0, 5);
+        const exists = prev.find((c) => c.name === city);
+        if (exists) return prev;
+        return [{ name: city, coordinates: coords }, ...prev].slice(0, 5);
       });
+    };
+
+    if (searchData) {
+      updateData(searchData.city, searchData.coordinates, searchData.sunrise, searchData.sunset);
     } else if (geoCity && geoCoords) {
-      const formattedCity = formatCityForUrl(geoCity);
-
-      setWeatherData({
-        city: geoCity,
-        coordinates: geoCoords,
-        sunrise: 0,
-        sunset: 0,
-      });
-
-      setMapData({
-        city: formattedCity,
-        coordinates: geoCoords,
-      });
-
-      setInputValue(geoCity);
+      updateData(geoCity, geoCoords);
     }
   }, [searchData, geoCity, geoCoords]);
 
-  const isLoading = geoLoading || searchLoading;
-  const error = geoError || searchError;
-
   useEffect(() => {
-    if (error) {
-      setCurrentError(error);
+    if (geoError || searchError) {
+      setCurrentError(geoError || searchError);
     }
-  }, [error]);
+  }, [geoError, searchError]);
 
-  const handleErrorClose = () => {
-    setCurrentError(null);
-  };
+  const handleErrorClose = () => setCurrentError(null);
 
   const handleCitySelect = (city: string) => {
-    const cityData = recentCities.find((cityObj) => cityObj.name === city);
-
+    const cityData = recentCities.find((c) => c.name === city);
     if (cityData) {
-      setWeatherData({
-        city: cityData.name,
-        coordinates: cityData.coordinates,
-        sunrise: 0,
-        sunset: 0,
-      });
-
-      const formattedCity = formatCityForUrl(city);
-      setMapData({
-        city: formattedCity,
-        coordinates: cityData.coordinates,
-      });
+      setWeatherData({ city: cityData.name, coordinates: cityData.coordinates, sunrise: 0, sunset: 0 });
+      setMapData({ city: formatCityForUrl(city), coordinates: cityData.coordinates });
     }
   };
 
   const handleRemoveCity = (cityToRemove: string) => {
-    setRecentCities(prevCities => 
-      prevCities.filter(cityObj => cityObj.name !== cityToRemove)
-    );
+    setRecentCities((prev) => prev.filter((c) => c.name !== cityToRemove));
   };
-
-  useEffect(() => {
-    console.log("Últimas 3 ciudades visitadas:", recentCities);
-  }, [recentCities]);
 
   return (
     <Box
@@ -181,9 +130,9 @@ const AppLayout = () => {
     >
       <Header
         city={weatherData.city}
-        recentCities={recentCities.map((cityObj) => cityObj.name)}
-        sunrise={weatherData.sunrise}  // Ahora pasamos el número directamente
-        sunset={weatherData.sunset}    // Ahora pasamos el número directamente
+        recentCities={recentCities.map((c) => c.name)}
+        sunrise={weatherData.sunrise}
+        sunset={weatherData.sunset}
         onCitySelect={handleCitySelect}
         onRemoveCity={handleRemoveCity}
       />
@@ -203,7 +152,7 @@ const AppLayout = () => {
       >
         <CitySearch
           inputValue={inputValue}
-          isLoading={isLoading}
+          isLoading={geoLoading || searchLoading}
           suggestions={suggestions}
           showSuggestions={showSuggestions}
           onInputChange={handleInputChange}
@@ -216,12 +165,11 @@ const AppLayout = () => {
           city={weatherData.city}
           coordinates={weatherData.coordinates}
           mapData={mapData}
-          isLoading={isLoading}
+          isLoading={geoLoading || searchLoading}
         />
       </Container>
 
       <Footer />
-
       <ErrorSnackbar error={currentError} onClose={handleErrorClose} />
     </Box>
   );
