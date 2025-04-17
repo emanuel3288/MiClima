@@ -38,6 +38,13 @@ const useCitySearch = (
   };
 
   const fetchCityImage = useCallback(async (cityName: string) => {
+    // Verificar si la imagen está en cache
+    const cachedImage = localStorage.getItem(cityName);
+    if (cachedImage) {
+      setBackgroundImage(cachedImage);
+      return;
+    }
+
     try {
       const response = await fetch(`https://api.pexels.com/v1/search?query=${cityName} city landmarks&per_page=1`, {
         headers: {
@@ -52,7 +59,9 @@ const useCitySearch = (
       const data = await response.json();
       
       if (data.photos?.length > 0) {
-        setBackgroundImage(data.photos[0].src.large2x);
+        const imageUrl = data.photos[0].src.large2x;
+        localStorage.setItem(cityName, imageUrl); // Guardar la imagen en cache
+        setBackgroundImage(imageUrl);
       } else {
         const fallbackResponse = await fetch('https://api.pexels.com/v1/search?query=city skyline&per_page=1', {
           headers: {
@@ -66,7 +75,9 @@ const useCitySearch = (
         
         const fallbackData = await fallbackResponse.json();
         if (fallbackData.photos?.length > 0) {
-          setBackgroundImage(fallbackData.photos[0].src.large2x);
+          const fallbackImageUrl = fallbackData.photos[0].src.large2x;
+          localStorage.setItem(cityName, fallbackImageUrl); // Guardar la imagen en cache
+          setBackgroundImage(fallbackImageUrl);
         }
       }
     } catch (err) {

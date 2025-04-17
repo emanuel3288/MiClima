@@ -10,39 +10,41 @@ interface ThreeHourForecastProps {
   lon: number;
 }
 
-const ThreeHourForecast = ({ city, lat, lon }: ThreeHourForecastProps) => {
+const ThreeHourForecast = ({ lat, lon }: ThreeHourForecastProps) => {
   const [forecast, setForecast] = useState<ForecastItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentCity, setCurrentCity] = useState<string>(''); // Iniciar como un string vacío
+  const [currentCity, setCurrentCity] = useState('Cargando ciudad...');
 
   useEffect(() => {
-    const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
-    
-    const fetchData = async () => {
+    const fetchForecast = async () => {
+      const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+
       try {
         setLoading(true);
-        const response = await fetch(
+        setError(null);
+
+        const res = await fetch(
           `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=es`
         );
-        const data = await response.json();
+
+        if (!res.ok) throw new Error('Error al obtener los datos del pronóstico');
+
+        const data = await res.json();
+
         setForecast(data.list.slice(0, 8));
-        
-        // Asegúrate de que `currentCity` siempre tenga un valor de tipo string
-        if (data.city && data.city.name) {
-          setCurrentCity(`${data.city.name}, ${data.city.country}`);
-        } else {
-          setCurrentCity('Ciudad desconocida'); // Valor por defecto si no hay nombre de ciudad
-        }
+        setCurrentCity(data.city?.name ? `${data.city.name}, ${data.city.country}` : 'Ciudad desconocida');
+
       } catch (err) {
-        setError('Error al cargar el pronóstico');
+        console.error(err);
+        setError('No se pudo cargar el pronóstico del clima.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [city, lat, lon]);
+    fetchForecast();
+  }, [lat, lon]);
 
   if (loading) {
     return (
@@ -63,14 +65,11 @@ const ThreeHourForecast = ({ city, lat, lon }: ThreeHourForecastProps) => {
   return (
     <Box sx={{ width: '100%', px: 2 }}>
       <ForecastTittle city={currentCity} />
-      
+
       <Grid container spacing={2}>
         {forecast.map((item, index) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={item.dt}>
-            <ForecastCard 
-              item={item} 
-              isCurrent={index === 0} 
-            />
+            <ForecastCard item={item} isCurrent={index === 0} />
           </Grid>
         ))}
       </Grid>
