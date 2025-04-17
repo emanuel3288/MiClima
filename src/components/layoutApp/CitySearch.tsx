@@ -92,7 +92,16 @@ const CitySearch = ({
   );
 
   return (
-    <Box sx={{ position: 'relative', maxWidth: 600, mx: 'auto', width: '100%', mt: 4 }}>
+    <Box
+      sx={{
+        position: 'relative',
+        width: '100%',
+        mx: 'auto',
+        mt: 4,
+        px: { xs: 2, sm: 0 }, // Padding lateral en móviles
+        maxWidth: { xs: '100%', sm: 600 }, // Responsivo
+      }}
+    >
       <TextField
         fullWidth
         label="Buscar ciudad..."
@@ -104,6 +113,7 @@ const CitySearch = ({
         variant="outlined"
         disabled={isLoading}
         sx={{
+          minWidth: 0, // Evita problemas en flex
           '& .MuiOutlinedInput-root': {
             height: 56,
             borderRadius: 2,
@@ -154,6 +164,7 @@ const CitySearch = ({
             zIndex: theme.zIndex.modal,
             width: '100%',
             mt: 1,
+            maxWidth: { xs: '100%', sm: 600 }, // Responsivo
             maxHeight: 400,
             overflow: 'auto',
             backgroundColor: 'rgba(255, 255, 255, 0.2)',

@@ -41,7 +41,7 @@ const Header = ({ city, recentCities, onCitySelect, onRemoveCity }: HeaderProps)
         {/* Ciudad actual + Horas de luz centrados */}
         <Box 
           sx={{ 
-            display: { xs: "none", md: "flex" }, 
+            display: { xs: "none", md: "flex" }, // Ocultar en xs, mostrar en md
             alignItems: "center", 
             gap: 2, 
             textAlign: "center", 
@@ -57,10 +57,13 @@ const Header = ({ city, recentCities, onCitySelect, onRemoveCity }: HeaderProps)
           </Box>
         </Box>
 
-        
-
         {/* Ciudades recientes */}
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box 
+          sx={{ 
+            display: {xs:"none",md: "none" },
+            gap: 1 
+          }}
+        >
           {[...new Set(recentCities)].map((recentCity) => (
             <Box
               key={recentCity}
@@ -83,7 +86,7 @@ const Header = ({ city, recentCities, onCitySelect, onRemoveCity }: HeaderProps)
                   e.stopPropagation();
                   onRemoveCity(recentCity);
                 }}
-                sx={{ marginLeft: 1, color: "black" }} // X en negro
+                sx={{ marginLeft: 1, color: "black" }}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
