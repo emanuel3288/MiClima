@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
-import { Box, Container, Snackbar, Alert } from "@mui/material";
-import Header from "../layout/Header";
-import Footer from "../layout/Footer";
-import CitySearch from "../layoutApp/CitySearch";
-import WeatherDashboard from "../layoutApp/WeatherDashboard";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { Box, Container, Snackbar, Alert, CircularProgress } from "@mui/material";
+
+// Carga diferida
+const Header = lazy(() => import("../layout/Header"));
+const Footer = lazy(() => import("../layout/Footer"));
+const CitySearch = lazy(() => import("../layoutApp/CitySearch"));
+const WeatherDashboard = lazy(() => import("../layoutApp/WeatherDashboard"));
+
 import useGeolocation from "../layoutApp/useGeolocation";
 import useCitySearch from "../layoutApp/useCitySearch";
 
@@ -128,14 +131,16 @@ const AppLayout = () => {
         transition: "background-image 0.5s ease-in-out",
       }}
     >
-      <Header
-        city={weatherData.city}
-        recentCities={recentCities.map((c) => c.name)}
-        sunrise={weatherData.sunrise}
-        sunset={weatherData.sunset}
-        onCitySelect={handleCitySelect}
-        onRemoveCity={handleRemoveCity}
-      />
+      <Suspense fallback={<CircularProgress color="inherit" size={24} />}>
+        <Header
+          city={weatherData.city}
+          recentCities={recentCities.map((c) => c.name)}
+          sunrise={weatherData.sunrise}
+          sunset={weatherData.sunset}
+          onCitySelect={handleCitySelect}
+          onRemoveCity={handleRemoveCity}
+        />
+      </Suspense>
 
       <Container
         maxWidth="lg"
@@ -150,26 +155,33 @@ const AppLayout = () => {
           px: { xs: 2, sm: 3 },
         }}
       >
-        <CitySearch
-          inputValue={inputValue}
-          isLoading={geoLoading || searchLoading}
-          suggestions={suggestions}
-          showSuggestions={showSuggestions}
-          onInputChange={handleInputChange}
-          onCitySearch={handleCitySearch}
-          onSuggestionClick={handleSuggestionClick}
-          onKeyDown={handleKeyDown}
-        />
+        <Suspense fallback={<CircularProgress color="inherit" size={24} />}>
+          <CitySearch
+            inputValue={inputValue}
+            isLoading={geoLoading || searchLoading}
+            suggestions={suggestions}
+            showSuggestions={showSuggestions}
+            onInputChange={handleInputChange}
+            onCitySearch={handleCitySearch}
+            onSuggestionClick={handleSuggestionClick}
+            onKeyDown={handleKeyDown}
+          />
+        </Suspense>
 
-        <WeatherDashboard
-          city={weatherData.city}
-          coordinates={weatherData.coordinates}
-          mapData={mapData}
-          isLoading={geoLoading || searchLoading}
-        />
+        <Suspense fallback={<CircularProgress color="inherit" size={24} />}>
+          <WeatherDashboard
+            city={weatherData.city}
+            coordinates={weatherData.coordinates}
+            mapData={mapData}
+            isLoading={geoLoading || searchLoading}
+          />
+        </Suspense>
       </Container>
 
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
+
       <ErrorSnackbar error={currentError} onClose={handleErrorClose} />
     </Box>
   );
