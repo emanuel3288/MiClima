@@ -1,7 +1,6 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { Box, Container, Snackbar, Alert, CircularProgress } from "@mui/material";
 
-// Carga diferida
 const Header = lazy(() => import("../layout/Header"));
 const Footer = lazy(() => import("../layout/Footer"));
 const CitySearch = lazy(() => import("../layoutApp/CitySearch"));
@@ -14,7 +13,7 @@ const defaultCity = "Buenos Aires";
 const defaultCoords = { lat: -34.61315, lon: -58.37723 };
 
 const ErrorSnackbar = ({ error, onClose }: { error: string | null; onClose: () => void }) => {
-  const [open, setOpen] = useState(!!error);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setOpen(!!error);
@@ -25,9 +24,7 @@ const ErrorSnackbar = ({ error, onClose }: { error: string | null; onClose: () =
     onClose();
   };
 
-  if (!error) return null;
-
-  return (
+  return error ? (
     <Snackbar
       open={open}
       autoHideDuration={6000}
@@ -38,7 +35,7 @@ const ErrorSnackbar = ({ error, onClose }: { error: string | null; onClose: () =
         {error}
       </Alert>
     </Snackbar>
-  );
+  ) : null;
 };
 
 const AppLayout = () => {
@@ -74,29 +71,28 @@ const AppLayout = () => {
     searchData,
   } = useCitySearch(setBackgroundImage, inputValue, setInputValue);
 
-  const formatCityForUrl = (cityName: string) => cityName.split(",")[0].trim().toLowerCase().replace(/\s+/g, "-");
+  const formatCityForUrl = useCallback((cityName: string) => cityName.split(",")[0].trim().toLowerCase().replace(/\s+/g, "-"), []);
+
+  const updateData = useCallback((city: string, coords: { lat: number; lon: number }, sunrise = 0, sunset = 0) => {
+    const formattedCity = formatCityForUrl(city);
+
+    setWeatherData({ city, coordinates: coords, sunrise, sunset });
+    setMapData({ city: formattedCity, coordinates: coords });
+    setInputValue(city);
+
+    setRecentCities((prev) => {
+      if (prev.some((c) => c.name === city)) return prev;
+      return [{ name: city, coordinates: coords }, ...prev].slice(0, 5);
+    });
+  }, [formatCityForUrl]);
 
   useEffect(() => {
-    const updateData = (city: string, coords: { lat: number; lon: number }, sunrise = 0, sunset = 0) => {
-      const formattedCity = formatCityForUrl(city);
-
-      setWeatherData({ city, coordinates: coords, sunrise, sunset });
-      setMapData({ city: formattedCity, coordinates: coords });
-      setInputValue(city);
-
-      setRecentCities((prev) => {
-        const exists = prev.find((c) => c.name === city);
-        if (exists) return prev;
-        return [{ name: city, coordinates: coords }, ...prev].slice(0, 5);
-      });
-    };
-
     if (searchData) {
       updateData(searchData.city, searchData.coordinates, searchData.sunrise, searchData.sunset);
     } else if (geoCity && geoCoords) {
       updateData(geoCity, geoCoords);
     }
-  }, [searchData, geoCity, geoCoords]);
+  }, [searchData, geoCity, geoCoords, updateData]);
 
   useEffect(() => {
     if (geoError || searchError) {
@@ -106,17 +102,17 @@ const AppLayout = () => {
 
   const handleErrorClose = () => setCurrentError(null);
 
-  const handleCitySelect = (city: string) => {
+  const handleCitySelect = useCallback((city: string) => {
     const cityData = recentCities.find((c) => c.name === city);
     if (cityData) {
       setWeatherData({ city: cityData.name, coordinates: cityData.coordinates, sunrise: 0, sunset: 0 });
       setMapData({ city: formatCityForUrl(city), coordinates: cityData.coordinates });
     }
-  };
+  }, [recentCities, formatCityForUrl]);
 
-  const handleRemoveCity = (cityToRemove: string) => {
+  const handleRemoveCity = useCallback((cityToRemove: string) => {
     setRecentCities((prev) => prev.filter((c) => c.name !== cityToRemove));
-  };
+  }, []);
 
   return (
     <Box
