@@ -1,11 +1,9 @@
-import { useState, useEffect, lazy, Suspense, useCallback } from "react";
-import { Box, Container, Snackbar, Alert, CircularProgress } from "@mui/material";
-
-const Header = lazy(() => import("../layout/Header"));
-const Footer = lazy(() => import("../layout/Footer"));
-const CitySearch = lazy(() => import("../layoutApp/CitySearch"));
-const WeatherDashboard = lazy(() => import("../layoutApp/WeatherDashboard"));
-
+import { useState, useEffect } from "react";
+import { Box, Container, Snackbar, Alert } from "@mui/material";
+import Header from "../layout/Header";
+import Footer from "../layout/Footer";
+import CitySearch from "../layoutApp/CitySearch";
+import WeatherDashboard from "../layoutApp/WeatherDashboard";
 import useGeolocation from "../layoutApp/useGeolocation";
 import useCitySearch from "../layoutApp/useCitySearch";
 
@@ -13,7 +11,7 @@ const defaultCity = "Buenos Aires";
 const defaultCoords = { lat: -34.61315, lon: -58.37723 };
 
 const ErrorSnackbar = ({ error, onClose }: { error: string | null; onClose: () => void }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!error);
 
   useEffect(() => {
     setOpen(!!error);
@@ -24,7 +22,9 @@ const ErrorSnackbar = ({ error, onClose }: { error: string | null; onClose: () =
     onClose();
   };
 
-  return error ? (
+  if (!error) return null;
+
+  return (
     <Snackbar
       open={open}
       autoHideDuration={6000}
@@ -35,7 +35,7 @@ const ErrorSnackbar = ({ error, onClose }: { error: string | null; onClose: () =
         {error}
       </Alert>
     </Snackbar>
-  ) : null;
+  );
 };
 
 const AppLayout = () => {
@@ -71,28 +71,29 @@ const AppLayout = () => {
     searchData,
   } = useCitySearch(setBackgroundImage, inputValue, setInputValue);
 
-  const formatCityForUrl = useCallback((cityName: string) => cityName.split(",")[0].trim().toLowerCase().replace(/\s+/g, "-"), []);
-
-  const updateData = useCallback((city: string, coords: { lat: number; lon: number }, sunrise = 0, sunset = 0) => {
-    const formattedCity = formatCityForUrl(city);
-
-    setWeatherData({ city, coordinates: coords, sunrise, sunset });
-    setMapData({ city: formattedCity, coordinates: coords });
-    setInputValue(city);
-
-    setRecentCities((prev) => {
-      if (prev.some((c) => c.name === city)) return prev;
-      return [{ name: city, coordinates: coords }, ...prev].slice(0, 5);
-    });
-  }, [formatCityForUrl]);
+  const formatCityForUrl = (cityName: string) => cityName.split(",")[0].trim().toLowerCase().replace(/\s+/g, "-");
 
   useEffect(() => {
+    const updateData = (city: string, coords: { lat: number; lon: number }, sunrise = 0, sunset = 0) => {
+      const formattedCity = formatCityForUrl(city);
+
+      setWeatherData({ city, coordinates: coords, sunrise, sunset });
+      setMapData({ city: formattedCity, coordinates: coords });
+      setInputValue(city);
+
+      setRecentCities((prev) => {
+        const exists = prev.find((c) => c.name === city);
+        if (exists) return prev;
+        return [{ name: city, coordinates: coords }, ...prev].slice(0, 5);
+      });
+    };
+
     if (searchData) {
       updateData(searchData.city, searchData.coordinates, searchData.sunrise, searchData.sunset);
     } else if (geoCity && geoCoords) {
       updateData(geoCity, geoCoords);
     }
-  }, [searchData, geoCity, geoCoords, updateData]);
+  }, [searchData, geoCity, geoCoords]);
 
   useEffect(() => {
     if (geoError || searchError) {
@@ -102,17 +103,17 @@ const AppLayout = () => {
 
   const handleErrorClose = () => setCurrentError(null);
 
-  const handleCitySelect = useCallback((city: string) => {
+  const handleCitySelect = (city: string) => {
     const cityData = recentCities.find((c) => c.name === city);
     if (cityData) {
       setWeatherData({ city: cityData.name, coordinates: cityData.coordinates, sunrise: 0, sunset: 0 });
       setMapData({ city: formatCityForUrl(city), coordinates: cityData.coordinates });
     }
-  }, [recentCities, formatCityForUrl]);
+  };
 
-  const handleRemoveCity = useCallback((cityToRemove: string) => {
+  const handleRemoveCity = (cityToRemove: string) => {
     setRecentCities((prev) => prev.filter((c) => c.name !== cityToRemove));
-  }, []);
+  };
 
   return (
     <Box
@@ -127,16 +128,14 @@ const AppLayout = () => {
         transition: "background-image 0.5s ease-in-out",
       }}
     >
-      <Suspense fallback={<CircularProgress color="inherit" size={24} />}>
-        <Header
-          city={weatherData.city}
-          recentCities={recentCities.map((c) => c.name)}
-          sunrise={weatherData.sunrise}
-          sunset={weatherData.sunset}
-          onCitySelect={handleCitySelect}
-          onRemoveCity={handleRemoveCity}
-        />
-      </Suspense>
+      <Header
+        city={weatherData.city}
+        recentCities={recentCities.map((c) => c.name)}
+        sunrise={weatherData.sunrise}
+        sunset={weatherData.sunset}
+        onCitySelect={handleCitySelect}
+        onRemoveCity={handleRemoveCity}
+      />
 
       <Container
         maxWidth="lg"
@@ -151,33 +150,26 @@ const AppLayout = () => {
           px: { xs: 2, sm: 3 },
         }}
       >
-        <Suspense fallback={<CircularProgress color="inherit" size={24} />}>
-          <CitySearch
-            inputValue={inputValue}
-            isLoading={geoLoading || searchLoading}
-            suggestions={suggestions}
-            showSuggestions={showSuggestions}
-            onInputChange={handleInputChange}
-            onCitySearch={handleCitySearch}
-            onSuggestionClick={handleSuggestionClick}
-            onKeyDown={handleKeyDown}
-          />
-        </Suspense>
+        <CitySearch
+          inputValue={inputValue}
+          isLoading={geoLoading || searchLoading}
+          suggestions={suggestions}
+          showSuggestions={showSuggestions}
+          onInputChange={handleInputChange}
+          onCitySearch={handleCitySearch}
+          onSuggestionClick={handleSuggestionClick}
+          onKeyDown={handleKeyDown}
+        />
 
-        <Suspense fallback={<CircularProgress color="inherit" size={24} />}>
-          <WeatherDashboard
-            city={weatherData.city}
-            coordinates={weatherData.coordinates}
-            mapData={mapData}
-            isLoading={geoLoading || searchLoading}
-          />
-        </Suspense>
+        <WeatherDashboard
+          city={weatherData.city}
+          coordinates={weatherData.coordinates}
+          mapData={mapData}
+          isLoading={geoLoading || searchLoading}
+        />
       </Container>
 
-      <Suspense fallback={null}>
-        <Footer />
-      </Suspense>
-
+      <Footer />
       <ErrorSnackbar error={currentError} onClose={handleErrorClose} />
     </Box>
   );
