@@ -1,23 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
+    <!-- Google Site Verification -->
     <meta name="google-site-verification" content="8zSvSBII7FKPzCPAdxhQPuAxeP59NR-ms15EU1exa34" />
+    
+    <!-- Descripción -->
     <meta name="description" content="Consulta el pronóstico del clima actual y futuro. Datos precisos, mapas y alertas para tu ciudad.">
-    <!-- Google tag (gtag.js) -->
+
+    <!-- Preconnect y Preload de fuentes para mejorar el LCP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" media="all">
+
+    <!-- Google tag (gtag.js) solo en producción -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4W0PBS0XWZ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-    
       gtag('config', 'G-4W0PBS0XWZ');
     </script>
 
+    <!-- Permisos -->
     <meta http-equiv="Permissions-Policy" content="geolocation=(self)">
+
+    <!-- Meta básicos -->
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☀️</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Favicon (emoji sol ☀️) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☀️</text></svg>" />
+
+    <!-- Título -->
     <title>Mi Clima | Pronóstico del Tiempo Actual y por Días en tu Ciudad</title>
+
+    <!-- Estilo base para evitar flashes mientras carga -->
+    <style>
+      #root {
+        min-height: 100vh;
+        background-color: #0e0e0e;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
