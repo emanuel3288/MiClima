@@ -97,10 +97,14 @@ const WeatherCard = ({ weather, currentTime, windSpeed, gustSpeed, humidity, chi
       }
     }}>
       <CardContent>
-        <Box textAlign="center" mb={2}>
-          <Typography variant="h4" fontWeight="600">{weather.name || "Cargando..."}</Typography>
-          <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>{currentTime}</Typography>
-        </Box>
+      <Box textAlign="center" mb={2}>
+        <Typography variant="h4" fontWeight="600">
+          {weather?.name || "Buenos Aires"}
+        </Typography>
+        <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+          {currentTime || ""}
+        </Typography>
+      </Box>
         <Grid container spacing={3} justifyContent="center">
           <Grid item xs={12} sm={4} textAlign="center">
             {getWeatherIcon(weather.weather[0]?.main)}
